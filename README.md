@@ -50,7 +50,7 @@
 
 </div>
 
-**English | [简体中文](https://github.com/Fliggy-Mobile/fiamge)**
+**English | [简体中文](https://github.com/Fliggy-Mobile/fimage/blob/master/README_CN.md)**
 
 > Like it? Please cast your **Star** 🥰 ！
 
