@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Fliggy-Android-Team">
+  <a href="https://github.com/Fliggy-Mobile">
     <img width="200" src="https://gw.alicdn.com/tfs/TB1a288sxD1gK0jSZFKXXcJrVXa-360-360.png">
   </a>
 </p>
@@ -208,7 +208,7 @@ dependencies:
   fimage: ^<版本号>
 ```
 
-> ⚠️ 注意，请到 [**pub**](//todo) 获取 **FImage** 最新版本号
+> ⚠️ 注意，请到 [**pub**](https://pub.dev/packages/fimage) 获取 **FImage** 最新版本号
 
 ## 🖥 git 依赖方式
 
@@ -216,7 +216,7 @@ dependencies:
 dependencies:
   fimage:
     git:
-      url: 'git@github.com:Fliggy-Android-Team/fimage.git'
+      url: 'git@github.com:Fliggy-Mobile/fimage.git'
       ref: '<分支号 或 tag>'
 ```
 

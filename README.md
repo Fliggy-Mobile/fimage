@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://github.com/Fliggy-Android-Team">
+  <a href="https://github.com/Fliggy-Mobile">
     <img width="200" src="https://gw.alicdn.com/tfs/TB1a288sxD1gK0jSZFKXXcJrVXa-360-360.png">
   </a>
 </p>
@@ -207,7 +207,7 @@ dependencies:
   fimage: ^<version number>
 ```
 
-> ⚠️ Attention，please go to  [**pub**](//todo) to get the latest version number of **FImage**
+> ⚠️ Attention，please go to  [**pub**](https://pub.dev/packages/fimage) to get the latest version number of **FImage**
 
 ## 🖥 git dependency
 
