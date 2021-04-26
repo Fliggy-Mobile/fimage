@@ -26,8 +26,6 @@ dependencies:
 
   visibility_detector: ^0.1.4
 
-  image: ^3.0.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter

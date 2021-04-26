@@ -9,11 +9,11 @@
 
 <div align="center">
 
-<p>FImage realize loading a variety of image resources</p>
+<p>FImage实现加载多种图片资源</p>
 
-<p>Support dart:ui can decode static pictures <strong>&dynamic picture playback control</strong>, picture first frame callback decoding callback, all frame decoding completion callback, cache management, preload to cache, support network and local picture loading</p>
+<p>支持dart:ui可解码静态图片<strong>&动态图片播放控制</strong> ，图片第一帧回调解码回调，全部帧解码完成回调，缓存管理，预加载到缓存，支持网络和本地图片加载</p>
 
-<p><strong>Author：<a href="https://github.com/zhongyiqwer">ZhongYi</a>(<a href="zhongyi.zjx@alibaba-inc.com">zhongyi.zjx@alibaba-inc.com</a>)</strong></p>
+<p><strong>主理人：<a href="https://github.com/zhongyiqwer">钟易</a>(<a href="zhongyi.zjx@alibaba-inc.com">zhongyi.zjx@alibaba-inc.com</a>)</strong></p>
 
 <p>
 
@@ -50,35 +50,35 @@
 
 </div>
 
-**English | [简体中文](https://github.com/Fliggy-Mobile/fiamge)**
+**[English](https://github.com/Fliggy-Mobile/fimage) | 简体中文**
 
-> Like it? Please cast your **Star** 🥰 ！
+> 感觉还不错？请投出您的 **Star** 吧 🥰 ！
 
-# ✨ Features
+# ✨ 特性
 
-- Support the control of dart:ui decodable picture playback
+- 支持对dart:ui可解码图片播放的控制
 
-- Support custom extension decoding
+- 支持自定义扩展解码
 
-- Support static & dynamic pictures
+- 支持静态&动态图片
 
-- Support pictures to be preloaded into the cache
+- 支持图片进行预加载到缓存中
 
-- Support network & local & memory image loading
+- 支持网络&本地&内存图片加载
 
-- Provide cache, support custom size
+- 提供缓存，支持自定义大小
 
-- Provide rich callbacks (the picture is loaded and the callback is displayed for each frame)
+- 提供丰富回调（图片加载完成，每一帧展示回调）
 
-- Less code & small package, convenient for modification
+- 代码量少&包小，方便改造&扩展
 
-# 🛠 Guide
-In FImage, developers can easily use it.
+# 🛠 使用指南
+对于FImage中，开发者可以轻松的使用
 ```dart
-///Create a controller to control the image
+///创建控制iamge的controller
 var controller = FImageController(vsync: this);
 
-///Create FImage in build
+///在build中创建FImage
 Widget image = FImage(
   image: NetworkImage(imageUrl),
   width: 150,
@@ -86,7 +86,7 @@ Widget image = FImage(
   controller: controller,
   onFetchCompleted: (allImageInfo) {
     if(allImageInfo.frameCount == 0) {
-      ///load iamge error
+      ///加载解析图片出错
     } else if (!controller1.isCompleted) {
       controller1.forward();
     }
@@ -98,42 +98,42 @@ Widget image = FImage(
 );
 ```
 
-## ⚙️ Parameters
+## ⚙️ 参数
 
 ### FImageController
 
-|Param|Type|Necessary|Default|desc|
+|参数|类型|必要|默认值|说明|
 |---|---|:---:|---|---|
-|vsync|TickerProvider|true|null|Provide frame timing callback|
-|value|double|false|0.0|Animation initial value|
-|duration|Duration|false|null|Reverse animation time|
-|duration|Duration|false|null|Animation time (animation time parsed by image will be used)|
-|animationBehavior|AnimationBehavior|false|AnimationBehavior.normal|Animation behavior|
-|repetitionCount|int|false|-2|Animation loop times（default is -2 when can not resolved）|
+|vsync|TickerProvider|true|null|提供帧定时回调|
+|value|double|false|0.0|动画初始值|
+|duration|Duration|false|null|反向动画时间|
+|duration|Duration|false|null|动画时间(默认使用动图解析出来的动画时间)|
+|animationBehavior|AnimationBehavior|false|AnimationBehavior.normal|动画行为|
+|repetitionCount|int|false|-2|动画循环次数（不设置默认-2为动图解析出来次数）|
 
 ### FImage
 
-|Param|Type|Necessary|Default|desc|
+|参数|类型|必要|默认值|说明|
 |---|---|:---:|---|---|
-|imageProvider|ImageProvider|true|null|image loader|
-|controller|FImageController|true|null|Animation controller|
-|semanticLabel|String|false|null|picture description|
-|excludeFromSemantics|bool|false|false|Whether to exclude the image semantically|
-|width|double|false|null|picture width|
-|height|double|false|null|picture height|
-|onFetchCompleted|VoidCallback|false|null|image loading complete callback|
-|color|Color|false|null|Foreground of the picture|
-|colorBlendMode|BlendMode|false|null|color blending mode|
-|fit|BoxFit|false|null|Picture display mode|
-|alignment|AlignmentGeometry|false|Alignment.center|Alignment of the picture|
-|repeat|ImageRepeat|false|ImageRepeat.noRepeat|How the picture is repeated|
-|centerSlice|Rect|false|null|Slice stretch|
-|matchTextDirection|bool|false|false|Is it consistent with the text direction|
-|frameBuilder|FImageFrameBuilder|false|null|Callback for each frame of image|
-|needRepaintBoundary|bool|false|true|Whether the image uses a separate layer|
-|decoder|Decoder|false|GifDecoder|Picture decoder|
+|imageProvider|ImageProvider|true|null|图片加载器|
+|controller|FImageController|false|null|动画控制器|
+|semanticLabel|String|false|null|图片描述|
+|excludeFromSemantics|bool|false|false|是否从语义上排除该图片|
+|width|double|false|null|图片宽度|
+|height|double|false|null|图片高度|
+|onFetchCompleted|FOnFetchCompleted|false|null|图片加载完成回调|
+|color|Color|false|null|图片的前景色|
+|colorBlendMode|BlendMode|false|null|color的混合模式|
+|fit|BoxFit|false|null|图片的显示模式|
+|alignment|AlignmentGeometry|false|Alignment.center|图片的对齐方式|
+|repeat|ImageRepeat|false|ImageRepeat.noRepeat|图片的重复方式|
+|centerSlice|Rect|false|null|切片拉伸|
+|matchTextDirection|bool|false|false|是否与文本方向一致|
+|frameBuilder|FImageFrameBuilder|false|null|图片每一帧的回调|
+|needRepaintBoundary|bool|false|true|图片是否使用单独图层|
+|decoder|Decoder|false|GifDecoder|图片解码器|
 
-## 📺 Example
+## 📺 使用示例
 
 <img height="400" src="https://img.alicdn.com/imgextra/i3/O1CN016THoFV1NZyQfgFvde_!!6000000001585-1-tps-400-228.gif">
 
@@ -184,7 +184,8 @@ Widget image = FImage(
   }
 ```
 
-Load static pictures or do not control dynamic pictures
+
+加载静态图片或者不控制动图
 ```dart
 Widget image= FImage(
      imageProvider: NetworkImage(imageUrl),
@@ -193,34 +194,34 @@ Widget image= FImage(
      );           
 ```
 
-*The complete code can be found in the example/lib/example.dart file*。
+*完整示例代码见example/lib/example.dart文件*。
 
 
-# 😃 How to use？
+# 😃 如何使用？
 
-Add dependencies in the project `pubspec.yaml` file:
+在项目 `pubspec.yaml` 文件中添加依赖：
 
-## 🌐 pub dependency
+## 🌐 pub 依赖方式
 
 ```
 dependencies:
-  fimage: ^<version number>
+  fimage: ^<版本号>
 ```
 
-> ⚠️ Attention，please go to  [**pub**](//todo) to get the latest version number of **FImage**
+> ⚠️ 注意，请到 [**pub**](//todo) 获取 **FImage** 最新版本号
 
-## 🖥 git dependency
+## 🖥 git 依赖方式
 
 ```
 dependencies:
   fimage:
     git:
-      url: 'git@github.com:Fliggy-Mobile/fimage.git'
-      ref: '<Branch number or tag number>'
+      url: 'git@github.com:Fliggy-Android-Team/fimage.git'
+      ref: '<分支号 或 tag>'
 ```
 
 
-> ⚠️ Attention，please refer to [**FImage**](https://github.com/Fliggy-Mobile/fimage) official project for branch number or tag.。
+> ⚠️ 注意，分支号 或 tag 请以 [**FImage**](https://github.com/Fliggy-Mobile/fimage) 官方项目为准。
 
 
 # 💡 License
@@ -243,13 +244,14 @@ limitations under the License.
 ```
 
 
-### Like it? Please cast your  [**Star**](https://github.com/Fliggy-Mobile/fimage)  🥰 ！
+### 感觉还不错？请投出您的 [**Star**](https://github.com/Fliggy-Mobile/fimage) 吧 🥰 ！
 
 # How to run Demo project?
     1.clone project to local
 
     2.Enter the project example directory and run the following command
- 
+    
         flutter create .
 
     3.Run the demo in example
+    

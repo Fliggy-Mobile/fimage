@@ -1,6 +1,4 @@
-import 'package:fimage/fimage.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart';
 
 import 'example.dart';
 

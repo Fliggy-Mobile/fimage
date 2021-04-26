@@ -1,14 +1,11 @@
-import 'dart:async';
-import 'dart:developer';
-
-import 'dart:io';
-import 'dart:ui' as ui show Codec;
 import 'dart:ui';
+import 'package:fimage/base/decoder.dart';
+import 'package:fimage/base/image_info.dart';
 import 'package:fimage/base/loader.dart';
+import 'package:fimage/gif/gif_decoder.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:image/image.dart' hide Color, BlendMode;
 
 extension FSafeMap on Map {
   String getString(key, {String def}) {
@@ -40,90 +37,30 @@ extension FSafeMap on Map {
   }
 }
 
-typedef FirstFrameListener = void Function(ImageInfo firstImageInfo);
-typedef AllFrameListener = void Function(GifImageInfo allImageInfo);
-
-///currentFrame = -1,为第一帧还没有回来，0为第一帧。totalFrame = 0,为全部帧数据还没有回来。
+///currentFrame = -1 is first frame has not come back, = 0 is first frame.
+/// totalFrame = 0 is all the frame data has not come back.
+/// so, you can do many other thing use this callback.
 typedef FImageFrameBuilder = Widget Function(
     BuildContext context, Widget child, int currentFrame, int totalFrame);
 
-///image缓存
-class FImageCache {
-  final int maximumSize;
-  FImageCache({int maximumSize}) : maximumSize = maximumSize ?? 500;
+///All data analysis complete callback
+typedef FOnFetchCompleted = Function(BaseMultiImageInfo multiImageInfo);
 
-  final _cache = <String, GifImageInfo>{};
+///image controller
+///_repetitionCount = -2 is repetitionCount data not resolved yet.
+class FImageController extends AnimationController {
+  int repetitionCount = -2;
 
-  void clear() {
-    _cache.clear();
-  }
+  int _curRepetitionCount = 0;
 
-  bool containsKey(String key) {
-    return _cache.containsKey(key);
-  }
+  int get curRepetitionCount => _curRepetitionCount;
 
-  GifImageInfo get(String key) {
-    if (!containsKey(key)) {
-      return null;
-    }
-    var imageInfo = _cache.remove(key);
-    _cache[key] = imageInfo;
-    return imageInfo;
-  }
-
-  GifImageInfo putIfAbsent(String key, GifImageInfo Function() ifAbsent) {
-    var imageInfo = _cache.putIfAbsent(key, () => ifAbsent());
-    _checkCacheSize();
-    return imageInfo;
-  }
-
-  GifImageInfo update(
-      String key,
-      GifImageInfo Function(GifImageInfo imageInfo) update,
-      GifImageInfo Function() ifAbsent) {
-    var imageInfo = _cache.update(key, (value) => update(value),
-        ifAbsent: () => ifAbsent());
-    _cache.remove(key);
-    _cache[key] = imageInfo;
-    _checkCacheSize();
-    return imageInfo;
-  }
-
-  bool evict(Object key) {
-    final GifImageInfo pendingImage = _cache.remove(key);
-    if (pendingImage != null) {
-      return true;
-    }
-    return false;
-  }
-
-  void _checkCacheSize() {
-    while (_cache.length > maximumSize) {
-      _cache.remove(_cache.keys.first);
-    }
-  }
-}
-
-///gif缓存对外实例
-final fImageCache = FImageCache();
-
-///gif数据
-class GifImageInfo {
-  List<ImageInfo> _imageInfo = [];
-  List<ImageInfo> get imageInfo => _imageInfo;
-  int _duration = 0;
-  int get duration => _duration;
-  int _repetitionCount = 0;
-  int get repetitionCount => _repetitionCount;
-}
-
-///gif动画控制器
-class FGifController extends AnimationController {
-  FGifController(
+  FImageController(
       {@required TickerProvider vsync,
       double value = 0.0,
       Duration reverseDuration,
       Duration duration,
+      this.repetitionCount = -2,
       AnimationBehavior animationBehavior})
       : super(
             value: value,
@@ -134,13 +71,24 @@ class FGifController extends AnimationController {
             animationBehavior: animationBehavior ?? AnimationBehavior.normal,
             vsync: vsync);
 
+  ///you can use this map storage some temp var
   Map _map = Map();
+
   set(key, value) => _map[key] = value;
+
   T get<T>(key, {T def}) {
     if (_map[key] is T) {
       return _map[key];
     }
     return def;
+  }
+
+  @override
+  void reset() {
+    super.reset();
+    _map.clear();
+    repetitionCount = -2;
+    _curRepetitionCount = 0;
   }
 
   @override
@@ -150,10 +98,13 @@ class FGifController extends AnimationController {
   }
 }
 
+// ignore: must_be_immutable
 class FImage extends StatefulWidget {
   FImage({
-    @required this.image,
-    @required this.controller,
+    @required this.imageProvider,
+    this.controller,
+    this.decoder,
+    this.needRepaintBoundary = true,
     this.semanticLabel,
     this.excludeFromSemantics = false,
     this.width,
@@ -167,10 +118,13 @@ class FImage extends StatefulWidget {
     this.centerSlice,
     this.matchTextDirection = false,
     this.frameBuilder,
-  }) : assert(image != null && controller != null);
-  final VoidCallback onFetchCompleted;
-  final FGifController controller;
-  final ImageProvider image;
+  }) : assert(imageProvider != null);
+
+  final FOnFetchCompleted onFetchCompleted;
+  final FImageController controller;
+  final ImageProvider imageProvider;
+  final Decoder decoder;
+  final bool needRepaintBoundary;
   final double width;
   final double height;
   final Color color;
@@ -191,103 +145,132 @@ class FImage extends StatefulWidget {
 }
 
 class _FImageState extends State<FImage> with TickerProviderStateMixin {
-  List<ImageInfo> _infos;
-  int _duration = 0;
+  BaseMultiImageInfo _multiImageInfo;
   int _curIndex = 0;
-  int _nextIndex = 0;
-  int _totalIndex = 0;
-  int _totalRepetitionCount = 0;
   int _curRepetitionCount = 0;
   bool _fetchComplete = false;
+  bool isAutoController = false;
+  FImageController controller;
 
   ImageInfo get _imageInfo {
-    if (!_fetchComplete) return null;
-    return _infos == null ? null : _infos[_curIndex];
+    if (_getInfoLength <= _curIndex) return null;
+    return _multiImageInfo?.frameInfoList[_curIndex];
   }
 
-  int _getInfoLength() {
-    if (!_fetchComplete) return 0;
-    return _infos == null || _infos.isEmpty ? 0 : _infos.length - 1;
+  int get _getInfoLength {
+    return _multiImageInfo?.frameCount ?? 0;
   }
 
-  int _getNextIndex() {
-    return (widget.controller.value * _getInfoLength()).floor();
+  int get _getNextIndex {
+    if (controller == null) return 0;
+    var nextIndex = (controller.value /
+            (controller.upperBound - controller.lowerBound) *
+            (_getInfoLength - 1))
+        .floor();
+    if (nextIndex == _getInfoLength - 1 &&
+        (controller.repetitionCount > _curRepetitionCount ||
+            controller.repetitionCount == -1)) {
+      _curRepetitionCount++;
+      if (mounted) controller.forward(from: controller.lowerBound);
+    }
+    return nextIndex;
   }
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_listener);
+    controller = widget.controller;
+    widget.controller?.addListener(_listener);
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.controller.removeListener(_listener);
+    controller?.removeListener(_listener);
+    if (isAutoController) {
+      controller?.dispose();
+    }
   }
 
   @override
   void didUpdateWidget(FImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.image != oldWidget.image) {
-      _fetchGif();
+    if (widget.imageProvider != oldWidget.imageProvider) {
+      _fetchImage();
     }
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller.removeListener(_listener);
-      widget.controller.addListener(_listener);
+
+    if (widget.controller != oldWidget.controller &&
+        widget.controller != null) {
+      oldWidget.controller?.removeListener(_listener);
+      isAutoController = false;
+      controller?.removeListener(_listener);
+      controller = widget.controller;
+      controller.addListener(_listener);
+    }
+  }
+
+  void _needAutoController() {
+    if (mounted && controller == null && _getInfoLength > 1) {
+      isAutoController = true;
+      controller = new FImageController(vsync: this);
+      controller.addListener(_listener);
     }
   }
 
   void _listener() {
-    _nextIndex = _getNextIndex();
-    // print(
-    //     '_curIndex=$_curIndex   controller.value=${widget.controller.value}  _nextIndex=$_nextIndex');
-    if (_curIndex != _nextIndex && _fetchComplete) {
-      if (mounted)
+    if (_curIndex != _getNextIndex && _fetchComplete) {
+      if (mounted) {
         setState(() {
-          _curIndex = _nextIndex;
+          _curIndex = _getNextIndex;
         });
+      }
     }
   }
 
-  void _fetchGif() {
-    //var time = DateTime.now().millisecondsSinceEpoch;
-    fetchGif(widget.image, firstFrameListener: (firstImageInfo) {
+  void _fetchImage() {
+    _fetchComplete = false;
+    fetchImage(widget.imageProvider, widget.decoder ?? GifDecoder(),
+        firstFrameListener: (firstImageInfo) {
       if (mounted) {
         setState(() {
-          // print(
-          //     'firstFrameListener= ${DateTime.now().millisecondsSinceEpoch - time}');
-          _infos = [firstImageInfo];
+          _multiImageInfo = BaseMultiImageInfo(frameInfoList: [null]);
           _curIndex = 0;
-          _fetchComplete = true;
         });
       }
-    }, allFrameListener: (imageInfo) {
-      if (mounted)
-        setState(() {
-          // print(
-          //     'allFrameListener= ${DateTime.now().millisecondsSinceEpoch - time}');
-          _infos = imageInfo.imageInfo;
-          _curRepetitionCount = 0;
-          _totalRepetitionCount = imageInfo.repetitionCount;
-          _duration = imageInfo.duration;
-          _fetchComplete = true;
-          widget.controller.duration = Duration(milliseconds: _duration);
-          widget.controller.set('onFetchCompleted', true);
-          _curIndex = _getNextIndex();
-          _totalIndex = imageInfo.imageInfo.length;
-          if (widget.onFetchCompleted != null) {
-            widget.onFetchCompleted();
+    }, allFrameListener: (allImageInfo) {
+      if (mounted) {
+        _multiImageInfo = null;
+        _curRepetitionCount = 0;
+        _fetchComplete = true;
+        _curIndex = _getNextIndex;
+        _needAutoController();
+        if (_getInfoLength > 1) {
+          if (controller.repetitionCount == -2) {
+            controller.repetitionCount = _multiImageInfo.repetitionCount;
           }
-        });
+          controller.duration =
+              widget.controller?.duration ?? _multiImageInfo.totalDuration;
+          controller.set('onFetchCompleted', true);
+        }
+        if (widget.onFetchCompleted != null) {
+          widget.onFetchCompleted(_multiImageInfo);
+        }
+        if (_getInfoLength > 1) {
+          setState(() {
+            if (isAutoController) {
+              controller.forward();
+            }
+          });
+        }
+      }
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_infos == null) {
-      _fetchGif();
+    if (_multiImageInfo == null) {
+      _fetchImage();
     }
   }
 
@@ -314,154 +297,20 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
         child: result,
       );
     }
-    if (widget.frameBuilder != null)
+    if (widget.frameBuilder != null) {
       result = widget.frameBuilder(
-          context, result, _infos != null ? _curIndex : -1, _totalIndex);
+          context,
+          result,
+          _multiImageInfo != null ? _curIndex : -1,
+          _fetchComplete ? _getInfoLength : 0);
+    }
+
+    if (widget.needRepaintBoundary) {
+      result = RepaintBoundary(
+        child: result,
+      );
+    }
 
     return result;
   }
-}
-
-final HttpClient _sharedHttpClient = HttpClient()..autoUncompress = false;
-
-HttpClient get _httpClient {
-  HttpClient client = _sharedHttpClient;
-  assert(() {
-    if (debugNetworkImageHttpClientProvider != null)
-      client = debugNetworkImageHttpClientProvider();
-    return true;
-  }());
-  return client;
-}
-
-final Map<String, List<AllFrameListener>> _allFrameMap = Map();
-final Map<String, List<FirstFrameListener>> _firstFrameMap = Map();
-
-void _addToFrameMap(FirstFrameListener firstFrameListener,
-    AllFrameListener allFrameListener, String key) {
-  _firstFrameMap.update(key, (value) {
-    value?.add(firstFrameListener);
-    return value;
-  }, ifAbsent: () => List()..add(firstFrameListener));
-
-  _allFrameMap.update(key, (value) {
-    value?.add(allFrameListener);
-    return value;
-  }, ifAbsent: () => List()..add(allFrameListener));
-}
-
-///请求gif资源
-///可以在使用前调用，进行预加载
-Future<void> fetchGif(ImageProvider provider,
-    {FirstFrameListener firstFrameListener,
-    AllFrameListener allFrameListener}) async {
-  GifImageInfo info;
-  dynamic data;
-
-  String key = provider is NetworkImage
-      ? provider.url
-      : provider is AssetImage
-          ? provider.keyName + provider.bundle?.toString()
-          : provider is MemoryImage
-              ? provider.bytes.toString()
-              : "";
-
-  try {
-    if (fImageCache.get(key) != null) {
-      info = fImageCache.get(key);
-      return allFrameListener?.call(info);
-    } else if (fImageCache.containsKey(key)) {
-      _addToFrameMap(firstFrameListener, allFrameListener, key);
-      return;
-    } else {
-      fImageCache.putIfAbsent(key, () => null);
-      _addToFrameMap(firstFrameListener, allFrameListener, key);
-    }
-
-    // if (provider is NetworkImage) {
-    //   final Uri resolved = Uri.base.resolve(provider.url);
-    //   final HttpClientRequest request = await _httpClient.getUrl(resolved);
-    //   provider.headers?.forEach((String name, String value) {
-    //     request.headers.add(name, value);
-    //   });
-    //
-    //   final HttpClientResponse response = await request.close();
-    //
-    //   if (response.statusCode != HttpStatus.ok) {
-    //     throw NetworkImageLoadException(
-    //         statusCode: response.statusCode, uri: resolved);
-    //   }
-    //   data = await consolidateHttpClientResponseBytes(
-    //     response,
-    //   );
-    // } else if (provider is AssetImage) {
-    //   AssetBundleImageKey key = await provider.obtainKey(ImageConfiguration());
-    //   data = await key.bundle.load(key.name);
-    // } else if (provider is FileImage) {
-    //   data = await provider.file.readAsBytes();
-    // } else if (provider is MemoryImage) {
-    //   data = provider.bytes;
-    // }
-
-    var time0 = DateTime.now().millisecondsSinceEpoch;
-    data = await loadImage(provider);
-    var time1 = DateTime.now().millisecondsSinceEpoch;
-
-    // if (provider is NetworkImage &&
-    //     provider.url ==
-    //         'https://media2.giphy.com/media/gdwf3hCno7Uouwdjmf/giphy.gif') {
-    //   print('zhongyi time0:${DateTime.now().millisecondsSinceEpoch - time0}');
-    //   var animation = GifDecoder().decodeAnimation(data);
-    //   print(
-    //       'zhongyi animation:$animation frame:${animation.numFrames} time:${DateTime.now().millisecondsSinceEpoch - time1}');
-    //   return;
-    // }
-
-    ui.Codec codec = await PaintingBinding.instance.instantiateImageCodec(data);
-    if (codec.frameCount == 0)
-      throw Exception('fetchGif is an empty codec: $key');
-
-    info = GifImageInfo();
-    int duration = 0;
-    info._repetitionCount = codec.repetitionCount;
-    for (int i = 0; i < codec.frameCount; i++) {
-      FrameInfo frameInfo = await codec.getNextFrame();
-      if (i == 0 && firstFrameListener != null) {
-        var imageInfo = ImageInfo(image: frameInfo.image);
-        if (_firstFrameMap.containsKey(key)) {
-          var list = _firstFrameMap.remove(key);
-          list?.forEach((element) {
-            element?.call(imageInfo);
-            element = null;
-          });
-          list.clear();
-        }
-      }
-      duration += frameInfo.duration.inMilliseconds;
-      info._imageInfo.add(ImageInfo(image: frameInfo.image));
-    }
-    if (provider is NetworkImage &&
-        provider.url ==
-            'https://media2.giphy.com/media/gdwf3hCno7Uouwdjmf/giphy.gif') {
-      print('zhongyi time1:${DateTime.now().millisecondsSinceEpoch - time1}');
-    }
-
-    info._duration = duration;
-
-    fImageCache.update(key, (value) => info, () => info);
-    if (_allFrameMap.containsKey(key)) {
-      var list = _allFrameMap.remove(key);
-      list?.forEach((element) {
-        element?.call(info);
-        element = null;
-      });
-      list.clear();
-    }
-  } catch (e) {
-    print(e.toString());
-    fImageCache.evict(key);
-    _firstFrameMap.remove(key);
-    _allFrameMap.remove(key);
-  }
-  return;
 }
