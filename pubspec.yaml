@@ -1,8 +1,8 @@
 name: fimage
 description: FImage realize loading a variety of image resources.
 version: 0.0.1
-author:
-homepage:
+author: ZhongYi(zhongyi.zjx@alibaba-inc.com)
+homepage: https://github.com/Fliggy-Mobile/fimage
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
