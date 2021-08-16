@@ -212,7 +212,7 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
   void _needAutoController() {
     if (mounted && controller == null && _getInfoLength > 1) {
       isAutoController = true;
-      controller = new FImageController(vsync: this);
+      controller = FImageController(vsync: this);
       controller.addListener(_listener);
     }
   }
@@ -233,24 +233,24 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
         firstFrameListener: (firstImageInfo) {
       if (mounted) {
         setState(() {
-          _multiImageInfo = BaseMultiImageInfo(frameInfoList: [null]);
+          _multiImageInfo = BaseMultiImageInfo(frameInfoList: [firstImageInfo]);
           _curIndex = 0;
         });
       }
     }, allFrameListener: (allImageInfo) {
       if (mounted) {
-        _multiImageInfo = null;
+        _multiImageInfo = allImageInfo;
         _curRepetitionCount = 0;
         _fetchComplete = true;
         _curIndex = _getNextIndex;
         _needAutoController();
+        controller?.duration =
+            widget.controller?.duration ?? _multiImageInfo.totalDuration;
+        controller?.set('onFetchCompleted', true);
         if (_getInfoLength > 1) {
           if (controller.repetitionCount == -2) {
             controller.repetitionCount = _multiImageInfo.repetitionCount;
           }
-          controller.duration =
-              widget.controller?.duration ?? _multiImageInfo.totalDuration;
-          controller.set('onFetchCompleted', true);
         }
         if (widget.onFetchCompleted != null) {
           widget.onFetchCompleted(_multiImageInfo);
