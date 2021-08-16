@@ -88,6 +88,8 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               VisibilityDetector(
                 key: Key('VisibilityDetector$controller2'),
                 onVisibilityChanged: (info) {
+                  print(
+                      'controller2 visibleFraction = ${info.visibleFraction}');
                   if (mounted && info.visibleFraction <= 0.5) {
                     controller2.stop();
                   } else if (mounted &&
@@ -102,7 +104,7 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
                   controller: controller2,
                   onFetchCompleted: (_) {
                     if (!controller2.isCompleted) {
-                      // controller2.forward();
+                      controller2.forward();
                     }
                   },
                   frameBuilder: (BuildContext context, Widget child,
@@ -114,7 +116,7 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               SizedBox(
                 height: 20,
               ),
-              Text('gif play when fetchCompleted'),
+              Text('gif auto play when fetchCompleted'),
               SizedBox(
                 height: 10,
               ),
@@ -122,12 +124,9 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
                 imageProvider: NetworkImage(gif),
                 width: 150,
                 height: 150,
-                controller: controller1,
                 onFetchCompleted: (allImageInfo) {
                   if (allImageInfo.frameCount == 0) {
                     print('onFetchCompleted load error');
-                  } else if (!controller1.isCompleted) {
-                    controller1.forward();
                   }
                 },
                 frameBuilder: (BuildContext context, Widget child,
@@ -140,7 +139,8 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               SizedBox(
                 height: 40,
               ),
-              Text('gif play only once when fetchCompleted and visibility>0.9'),
+              Text(
+                  'gif play only once when fetchCompleted and visibility > 0.9'),
               SizedBox(
                 height: 20,
               ),
