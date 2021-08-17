@@ -229,7 +229,7 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
 
   void _fetchImage() {
     _fetchComplete = false;
-    fetchImage(widget.imageProvider, widget.decoder ?? GifDecoder(),
+    fetchImage(widget.imageProvider, decoder: widget.decoder ?? GifDecoder(),
         firstFrameListener: (firstImageInfo) {
       if (mounted) {
         setState(() {
