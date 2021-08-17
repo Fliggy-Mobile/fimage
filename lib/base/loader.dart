@@ -71,8 +71,9 @@ void _addToFrameMap(FirstFrameListener firstFrameListener,
 
 ///request image
 ///Can be called before use for pre-loading
-void fetchImage(ImageProvider provider, Decoder decoder,
-    {FirstFrameListener firstFrameListener,
+void fetchImage(ImageProvider provider,
+    {Decoder decoder,
+    FirstFrameListener firstFrameListener,
     AllFrameListener allFrameListener}) async {
   BaseMultiImageInfo info;
   dynamic data;
