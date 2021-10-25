@@ -1,4 +1,5 @@
 import 'dart:ui';
+
 import 'package:fimage/base/decoder.dart';
 import 'package:fimage/base/image_info.dart';
 import 'package:fimage/base/loader.dart';
@@ -245,7 +246,7 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
         _curIndex = _getNextIndex;
         _needAutoController();
         controller?.duration =
-            widget.controller?.duration ?? _multiImageInfo.totalDuration;
+            widget.controller?.duration ?? _multiImageInfo?.totalDuration;
         controller?.set('onFetchCompleted', true);
         if (_getInfoLength > 1) {
           if (controller.repetitionCount == -2) {

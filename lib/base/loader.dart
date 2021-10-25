@@ -106,6 +106,7 @@ void fetchImage(ImageProvider provider,
     data = await loadImage(provider);
 
     decoder ??= GifDecoder();
+    print('apng - beginDecode');
     info = await decoder.decode(data, firstFrameListener: (imageInfo) {
       if (_firstFrameMap.containsKey(key)) {
         var list = _firstFrameMap.remove(key);

@@ -1,3 +1,4 @@
+import 'package:fimage/apng/apng_decoder.dart';
 import 'package:fimage/fimage.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -77,7 +78,19 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               ),
               Text('load png'),
               FImage(
-                imageProvider: NetworkImage(png),
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/alpha_gif2.gif"),
+                width: 150,
+                height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('Apng'),
+              FImage(
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/pic5.png"),
+                decoder: ApngDecoder(),
                 width: 150,
                 height: 150,
               ),
