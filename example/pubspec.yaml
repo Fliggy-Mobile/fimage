@@ -46,6 +46,7 @@ flutter:
     - assets/cars.gif
     - assets/alpha_gif2.gif
     - assets/pic5.png
+    - assets/fwidget.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

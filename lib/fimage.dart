@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:fimage/apng/apng_decoder.dart';
 import 'package:fimage/base/decoder.dart';
 import 'package:fimage/base/image_info.dart';
 import 'package:fimage/base/loader.dart';
@@ -102,6 +103,7 @@ class FImageController extends AnimationController {
 // ignore: must_be_immutable
 class FImage extends StatefulWidget {
   FImage({
+    Key key,
     @required this.imageProvider,
     this.controller,
     this.decoder,
@@ -119,7 +121,8 @@ class FImage extends StatefulWidget {
     this.centerSlice,
     this.matchTextDirection = false,
     this.frameBuilder,
-  }) : assert(imageProvider != null);
+  })  : assert(imageProvider != null),
+        super(key: key);
 
   final FOnFetchCompleted onFetchCompleted;
   final FImageController controller;
@@ -138,6 +141,28 @@ class FImage extends StatefulWidget {
   final String semanticLabel;
   final bool excludeFromSemantics;
   final FImageFrameBuilder frameBuilder;
+
+  FImage.apng({
+    Key key,
+    @required this.imageProvider,
+    this.controller,
+    this.needRepaintBoundary = true,
+    this.semanticLabel,
+    this.excludeFromSemantics = false,
+    this.width,
+    this.height,
+    this.onFetchCompleted,
+    this.color,
+    this.colorBlendMode,
+    this.fit,
+    this.alignment = Alignment.center,
+    this.repeat = ImageRepeat.noRepeat,
+    this.centerSlice,
+    this.matchTextDirection = false,
+    this.frameBuilder,
+  })  : assert(imageProvider != null),
+        this.decoder = ApngDecoder(),
+        super(key: key);
 
   @override
   State<StatefulWidget> createState() {
