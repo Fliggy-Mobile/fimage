@@ -2,26 +2,29 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:fimage/base/animation.dart';
 import 'package:fimage/base/decoder.dart';
+import 'package:fimage/base/image.dart';
 import 'package:fimage/base/image_info.dart';
 import 'package:fimage/base/loader.dart';
-import 'package:image/image.dart' as img;
+import 'package:fimage/base/png_decoder.dart';
 
 import 'apng_image_info.dart';
 
 class ApngDecoder extends Decoder {
   Future<BaseMultiImageInfo> decode(Uint8List data,
       {FirstFrameListener firstFrameListener}) async {
-    img.Animation anim = img.decodeAnimation(data);
+    var decoder = PngDecoder();
+    Animation anim = decoder.decodeAnimation(data);
     int duration = 0;
     List<BaseImageInfo> imageInfoList = [];
     for (int i = 0; i < anim.length; i++) {
-      img.Image frameImage = anim[i];
+      Image frameImage = anim[i];
       if (frameImage.duration <= 0) {
         // 没有时间信息，默认 24 帧
         frameImage.duration = 41;
       }
-      var bytes = frameImage.getBytes(format: img.Format.rgba);
+      var bytes = frameImage.getBytes(format: Format.rgba);
       ui.ImmutableBuffer immutableBuffer =
           await ui.ImmutableBuffer.fromUint8List(bytes);
       final ui.ImageDescriptor descriptor = ui.ImageDescriptor.raw(

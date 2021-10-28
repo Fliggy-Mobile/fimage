@@ -11,8 +11,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  image: ^2.1.19
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
