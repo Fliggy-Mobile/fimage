@@ -4,15 +4,14 @@ version: 0.0.4
 homepage: https://github.com/Fliggy-Mobile/fimage
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.7.0 <3.0.0"
   flutter: ">=1.20.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  image: ^2.1.14
-  xml: ^3.4.0
+  image: ^2.1.19
 
 dev_dependencies:
   flutter_test:
