@@ -39,7 +39,7 @@ class PngDecoder extends BaseDecoder {
   DecodeInfo startDecode(List<int> data) {
     _input = InputBuffer(data, bigEndian: true);
 
-    var pngHeader = _input.readBytes(8);
+    final pngHeader = _input.readBytes(8);
     const PNG_HEADER = [137, 80, 78, 71, 13, 10, 26, 10];
     for (var i = 0; i < 8; ++i) {
       if (pngHeader[i] != PNG_HEADER[i]) {
@@ -48,13 +48,13 @@ class PngDecoder extends BaseDecoder {
     }
 
     while (true) {
-      var inputPos = _input.position;
+      final inputPos = _input.position;
       var chunkSize = _input.readUint32();
-      var chunkType = _input.readString(4);
+      final chunkType = _input.readString(4);
       switch (chunkType) {
         case 'IHDR':
-          var hdr = InputBuffer.from(_input.readBytes(chunkSize));
-          List<int> hdrBytes = hdr.toUint8List();
+          final hdr = InputBuffer.from(_input.readBytes(chunkSize));
+          final List<int> hdrBytes = hdr.toUint8List();
           _info = InternalPngInfo();
           _info.width = hdr.readUint32();
           _info.height = hdr.readUint32();
@@ -103,24 +103,24 @@ class PngDecoder extends BaseDecoder {
               break;
           }
 
-          var crc = _input.readUint32();
-          var computedCrc = _crc(chunkType, hdrBytes);
+          final crc = _input.readUint32();
+          final computedCrc = _crc(chunkType, hdrBytes);
           if (crc != computedCrc) {
             throw ImageException('Invalid $chunkType checksum');
           }
           break;
         case 'PLTE':
           _info.palette = _input.readBytes(chunkSize).toUint8List();
-          var crc = _input.readUint32();
-          var computedCrc = _crc(chunkType, _info.palette);
+          final crc = _input.readUint32();
+          final computedCrc = _crc(chunkType, _info.palette as List<int>);
           if (crc != computedCrc) {
             throw ImageException('Invalid $chunkType checksum');
           }
           break;
         case 'tRNS':
           _info.transparency = _input.readBytes(chunkSize).toUint8List();
-          var crc = _input.readUint32();
-          var computedCrc = _crc(chunkType, _info.transparency);
+          final crc = _input.readUint32();
+          final computedCrc = _crc(chunkType, _info.transparency);
           if (crc != computedCrc) {
             throw ImageException('Invalid $chunkType checksum');
           }
@@ -133,7 +133,7 @@ class PngDecoder extends BaseDecoder {
           if (chunkSize != 4) {
             throw ImageException('Invalid gAMA chunk');
           }
-          var gammaInt = _input.readUint32();
+          final gammaInt = _input.readUint32();
           _input.skip(4); // CRC
           // A gamma of 1.0 doesn't have any affect, so pretend we didn't get
           // a gamma in that case.
@@ -152,7 +152,7 @@ class PngDecoder extends BaseDecoder {
           _input.skip(4); // CRC
           break;
         case 'fcTL': // Frame control chunk
-          PngFrame frame = InternalPngFrame();
+          final PngFrame frame = InternalPngFrame();
           _info.frames.add(frame);
           frame.sequenceNumber = _input.readUint32();
           frame.width = _input.readUint32();
@@ -168,19 +168,19 @@ class PngDecoder extends BaseDecoder {
         case 'fdAT':
           /*int sequenceNumber =*/
           _input.readUint32();
-          var frame = _info.frames.last as InternalPngFrame;
+          final frame = _info.frames.last as InternalPngFrame;
           frame.fdat.add(inputPos);
           _input.skip(chunkSize - 4);
           _input.skip(4); // CRC
           break;
         case 'bKGD':
           if (_info.colorType == 3) {
-            var paletteIndex = _input.readByte();
+            final paletteIndex = _input.readByte();
             chunkSize--;
-            var p3 = paletteIndex * 3;
-            var r = _info.palette[p3];
-            var g = _info.palette[p3 + 1];
-            var b = _info.palette[p3 + 2];
+            final p3 = paletteIndex * 3;
+            final r = _info.palette[p3];
+            final g = _info.palette[p3 + 1];
+            final b = _info.palette[p3 + 2];
             _info.backgroundColor = Color.fromRgb(r, g, b);
           } else if (_info.colorType == 0 || _info.colorType == 4) {
             /*int gray =*/ _input.readUint16();
@@ -295,7 +295,7 @@ class PngDecoder extends BaseDecoder {
     // Set up a LUT to transform colors for gamma correction.
     if (_info.colorLut == null) {
       _info.colorLut = List<int>(256);
-      for (var i = 0; i < 256; ++i) {
+      for (var i = 0; i < 256; i++) {
         var c = i;
         /*if (info.gamma != null) {
           c = (Math.pow((c / 255.0), info.gamma) * 255.0).toInt();
@@ -305,7 +305,7 @@ class PngDecoder extends BaseDecoder {
 
       // Apply the LUT to the palette, if necessary.
       if (_info.palette != null && _info.gamma != null) {
-        for (var i = 0; i < _info.palette.length; ++i) {
+        for (var i = 0; i < _info.palette.length; i++) {
           _info.palette[i] = _info.colorLut[_info.palette[i]];
         }
       }
@@ -349,55 +349,42 @@ class PngDecoder extends BaseDecoder {
   }
 
   @override
-  Animation decodeAnimation(List<int> data) {
-    if (startDecode(data) == null) {
+  Animation decodeAnimation(List<int> bytes) {
+    if (startDecode(bytes) == null) {
       return null;
     }
 
-    var anim = Animation();
+    final anim = Animation();
     anim.width = _info.width;
     anim.height = _info.height;
-
     if (!_info.isAnimated) {
-      var image = decodeFrame(0);
+      final image = decodeFrame(0);
       anim.addFrame(image);
       return anim;
     }
 
-    var dispose = PngFrame.APNG_DISPOSE_OP_NONE;
+    int dispose = PngFrame.APNG_DISPOSE_OP_BACKGROUND;
     var lastImage = Image(_info.width, _info.height);
     for (var i = 0; i < _info.numFrames; ++i) {
       //_frame = i;
-      if (lastImage == null) {
-        lastImage = Image(_info.width, _info.height);
-      } else {
-        lastImage = Image.from(lastImage);
-      }
+      lastImage = Image.from(lastImage);
 
-      var frame = _info.frames[i];
-      var image = decodeFrame(i);
+      final frame = _info.frames[i];
+      final image = decodeFrame(i);
       if (image == null) {
         continue;
       }
 
-      if (lastImage != null) {
-        if (dispose == PngFrame.APNG_DISPOSE_OP_BACKGROUND ||
-            dispose == PngFrame.APNG_DISPOSE_OP_PREVIOUS) {
-          lastImage.fill(_info.backgroundColor);
-        }
-        copyInto(
-          lastImage, image,
-          dstX: frame.xOffset,
-          dstY: frame.yOffset,
-          // blend: frame.blend == PngFrame.APNG_BLEND_OP_OVER
-        );
-      } else {
-        lastImage = image;
-      }
-
+      // if (dispose == PngFrame.APNG_DISPOSE_OP_BACKGROUND ||
+      //     dispose == PngFrame.APNG_DISPOSE_OP_PREVIOUS) {
+      //   lastImage.fill(_info.backgroundColor);
+      // }
+      lastImage.fill(_info.backgroundColor);
+      copyInto(lastImage, image,
+          dstX: frame.xOffset, dstY: frame.yOffset, blend: true);
       anim.addFrame(lastImage);
 
-      // dispose = frame.dispose;
+      dispose = frame.dispose;
     }
 
     return anim;

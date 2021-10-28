@@ -15,7 +15,7 @@ class PngInfo extends DecodeInfo {
   List<int> colorLut;
   double gamma;
   @override
-  int backgroundColor = 0x00ffffff;
+  int backgroundColor = 0x00000000;
   String iCCPName = '';
   int iCCPCompression = 0;
   Uint8List iCCPData;

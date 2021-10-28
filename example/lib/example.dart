@@ -100,8 +100,8 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               FImage.apng(
                 // imageProvider: NetworkImage(png),
                 imageProvider: AssetImage("assets/hotal.apng"),
-                width: 100,
-                height: 100,
+                width: 150,
+                height: 150,
               ),
               SizedBox(
                 height: 20,
