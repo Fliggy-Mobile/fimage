@@ -364,7 +364,7 @@ class PngDecoder extends BaseDecoder {
       return anim;
     }
 
-    var dispose = PngFrame.APNG_DISPOSE_OP_BACKGROUND;
+    var dispose = PngFrame.APNG_DISPOSE_OP_NONE;
     var lastImage = Image(_info.width, _info.height);
     for (var i = 0; i < _info.numFrames; ++i) {
       //_frame = i;
@@ -385,17 +385,19 @@ class PngDecoder extends BaseDecoder {
             dispose == PngFrame.APNG_DISPOSE_OP_PREVIOUS) {
           lastImage.fill(_info.backgroundColor);
         }
-        copyInto(lastImage, image,
-            dstX: frame.xOffset,
-            dstY: frame.yOffset,
-            blend: frame.blend == PngFrame.APNG_BLEND_OP_OVER);
+        copyInto(
+          lastImage, image,
+          dstX: frame.xOffset,
+          dstY: frame.yOffset,
+          // blend: frame.blend == PngFrame.APNG_BLEND_OP_OVER
+        );
       } else {
         lastImage = image;
       }
 
       anim.addFrame(lastImage);
 
-      dispose = frame.dispose;
+      // dispose = frame.dispose;
     }
 
     return anim;

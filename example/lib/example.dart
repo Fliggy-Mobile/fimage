@@ -57,6 +57,7 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: Colors.blue,
         appBar: AppBar(
           title: const Text('FImage Example'),
         ),
@@ -91,6 +92,16 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
                 imageProvider: AssetImage("assets/pic5.png"),
                 width: 150,
                 height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('Apng2'),
+              FImage.apng(
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/hotal.apng"),
+                width: 100,
+                height: 100,
               ),
               SizedBox(
                 height: 20,
@@ -142,8 +153,8 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
                 },
                 frameBuilder: (BuildContext context, Widget child,
                     int currentFrame, int totalFrame) {
-                  print(
-                      'currentFrame = $currentFrame totalFrame = $totalFrame');
+                  // print(
+                  //     'currentFrame = $currentFrame totalFrame = $totalFrame');
                   return child;
                 },
               ),
