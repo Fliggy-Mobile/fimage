@@ -106,6 +106,17 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               SizedBox(
                 height: 20,
               ),
+              Text('Apng3'),
+              FImage.apng(
+                // imageProvider: NetworkImage(png),
+                imageProvider: NetworkImage(
+                    "https://gw.alicdn.com/imgextra/i2/O1CN01S8El7z1D59fzuaxx2_!!6000000000164-54-tps-750-220.apng"),
+                width: 150,
+                height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
               Text('gif play when visibleFraction > 0.5'),
               VisibilityDetector(
                 key: Key('VisibilityDetector$controller2'),
