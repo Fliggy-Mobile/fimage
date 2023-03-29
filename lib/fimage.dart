@@ -255,7 +255,21 @@ class _FImageState extends State<FImage> with TickerProviderStateMixin {
 
   void _fetchImage() {
     _fetchComplete = false;
-    fetchImage(widget.imageProvider, decoder: widget.decoder ?? GifDecoder(),
+    var decoder = widget.decoder ?? GifDecoder();
+    if(widget.decoder == null) {
+      var url = "";
+      if(widget.imageProvider is NetworkImage) {
+        url = (widget.imageProvider as NetworkImage).url;
+      } else if(widget.imageProvider is AssetImage) {
+        url = (widget.imageProvider as AssetImage).assetName;
+      }
+      if(url.endsWith(".apng")) {
+        decoder = ApngDecoder();
+      } else if(url.endsWith(".gif")) {
+        decoder = GifDecoder();
+      }
+    }
+    fetchImage(widget.imageProvider, decoder: decoder,
         firstFrameListener: (firstImageInfo) {
       if (mounted) {
         setState(() {
