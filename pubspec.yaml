@@ -1,6 +1,6 @@
 name: fimage
 description: FImage realize loading a variety of image resources.
-version: 1.0.0
+version: 0.1.0
 homepage: https://github.com/Fliggy-Mobile/fimage
 
 environment:
