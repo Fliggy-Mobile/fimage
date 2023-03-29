@@ -9,3 +9,7 @@
 ## 0.0.3
 
 * fix can not load image bug
+
+## 0.1.0
+
+* add support apng

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui show Image;
+
 import 'package:flutter/cupertino.dart';
 
 class BaseMultiImageInfo {
@@ -25,7 +27,7 @@ class BaseImageInfo extends ImageInfo {
   final Duration duration;
 
   BaseImageInfo(
-      {@required image,
+      {@required ui.Image image,
       scale = 1.0,
       debugLabel,
       this.duration = const Duration(milliseconds: 0)})

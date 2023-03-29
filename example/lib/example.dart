@@ -57,6 +57,7 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        backgroundColor: Colors.blue,
         appBar: AppBar(
           title: const Text('FImage Example'),
         ),
@@ -77,7 +78,39 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
               ),
               Text('load png'),
               FImage(
-                imageProvider: NetworkImage(png),
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/alpha_gif2.gif"),
+                width: 150,
+                height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('Apng'),
+              FImage.apng(
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/pic5.png"),
+                width: 150,
+                height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('Apng2'),
+              FImage.apng(
+                // imageProvider: NetworkImage(png),
+                imageProvider: AssetImage("assets/hotal.apng"),
+                width: 150,
+                height: 150,
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text('Apng3'),
+              FImage.apng(
+                // imageProvider: NetworkImage(png),
+                imageProvider: NetworkImage(
+                    "https://gw.alicdn.com/imgextra/i2/O1CN01S8El7z1D59fzuaxx2_!!6000000000164-54-tps-750-220.apng"),
                 width: 150,
                 height: 150,
               ),
@@ -131,8 +164,8 @@ class _GifExampleState extends State<GifExample> with TickerProviderStateMixin {
                 },
                 frameBuilder: (BuildContext context, Widget child,
                     int currentFrame, int totalFrame) {
-                  print(
-                      'currentFrame = $currentFrame totalFrame = $totalFrame');
+                  // print(
+                  //     'currentFrame = $currentFrame totalFrame = $totalFrame');
                   return child;
                 },
               ),
